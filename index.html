@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>寶可夢冒險</title>
+<style>
+:root{
+  --bg:#f4f1ea; --panel:#ffffff; --ink:#1f2328; --muted:#6b7078; --line:#dcdcdc;
+  --red:#e3350d; --red-ink:#fff; --btn:#eef0f3; --btn-ink:#1f2328; --log:#fbfbfb;
+  --new:rgba(255,205,0,.32); --sky1:#bfe6ff; --sky2:#e8f7ff; --grass:#9fd67a;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#15171c; --panel:#21252c; --ink:#e9eaec; --muted:#a3a8b0; --line:#373b44;
+    --btn:#2d3139; --btn-ink:#e9eaec; --log:#1a1d22; --new:rgba(255,205,0,.18);
+    --sky1:#23405a; --sky2:#2c3b4a; --grass:#3d6b33;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+h1{margin:4px 0 12px;font-size:1.8rem}
+h2{margin:8px 0 10px;font-size:1.25rem}
+h3{margin:14px 0 8px;font-size:1rem}
+.muted{color:var(--muted);font-size:.88rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.row{display:flex;gap:10px;align-items:center}
+.row.wrap-row{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.stat b{display:block;font-size:1.2rem}
+button{font:inherit;border:1px solid var(--line);background:var(--btn);color:var(--btn-ink);
+  border-radius:8px;padding:8px 10px;cursor:pointer;transition:transform .05s,filter .15s}
+button:hover:not(:disabled){filter:brightness(.95)}
+button:active:not(:disabled){transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:var(--red);color:var(--red-ink);border-color:var(--red)}
+button.full{width:100%}
+.move{text-align:left;border-left:6px solid var(--tc);background:var(--panel)}
+.move small{display:block;color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button.on{background:var(--red);color:#fff;border-color:var(--red)}
+.tb{color:#fff;padding:1px 8px;border-radius:10px;font-size:.75rem;margin-right:4px;
+  text-shadow:0 1px 1px rgba(0,0,0,.45);white-space:nowrap}
+.hpwrap{background:#cfcfcf;border-radius:6px;height:10px;overflow:hidden;margin:4px 0 2px}
+.hpfill{height:100%;border-radius:6px;transition:width .5s ease}
+.xpwrap{background:#cfcfcf;border-radius:4px;height:5px;overflow:hidden;margin-top:4px}
+.xpfill{height:100%;background:#3fa9f5;transition:width .5s}
+.arena{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:4px 10px;
+  border-radius:14px;padding:12px;margin-bottom:12px;
+  background:linear-gradient(var(--sky1),var(--sky2) 55%,var(--grass) 56%)}
+.arena .card{background:var(--panel);border-radius:10px;padding:8px 10px;align-self:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.sprite{width:100%;max-width:150px;justify-self:center;image-rendering:pixelated;transition:opacity .4s,transform .4s}
+.sprite.hit{animation:shake .4s}
+.sprite.fainted{opacity:.15;transform:translateY(20px)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}
+  60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.log{background:var(--log);border:1px solid var(--line);border-left:4px solid var(--red);border-radius:8px;
+  padding:8px 12px;min-height:120px}
+.log div{padding:0 4px;border-radius:4px}
+.log .new{background:var(--new)}
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.dex .panel{text-align:center;padding:8px;margin:0}
+.dex img,.dex .unk{width:72px;height:72px}
+.dex .unk{display:inline-flex;align-items:center;justify-content:center;font-size:2.2rem}
+.starter{text-align:center}
+.starter img{width:96px;height:96px}
+input[type=text]{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);width:100%;max-width:280px}
+#toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:9;max-width:calc(100% - 32px)}
+.toast{background:#222;color:#fff;padding:10px 14px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);
+  animation:fadein .2s}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}}
+.footer{margin-top:20px;text-align:center}
+@media (max-width:560px){
+  .grid4{grid-template-columns:1fr 1fr}
+  .grid3{grid-template-columns:1fr 1fr}
+  .stats{grid-template-columns:1fr 1fr 1fr}
+  .stat b{font-size:1rem}
+  h1{font-size:1.5rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="toasts"></div>
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+
+<script>
+"use strict";
+/* ============================================================
+   寶可夢冒險 — 單一 HTML 檔版本
+   雙擊即可在任何電腦的瀏覽器遊玩，進度自動存在瀏覽器裡。
+   ============================================================ */
+
+const SPRITE = id => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+const SPRITE_BACK = id => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${id}.png`;
+// 圖片載入失敗（例如離線）時顯示精靈球
+const FALLBACK_IMG = "data:image/svg+xml," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#fff" stroke="#333" stroke-width="5"/>' +
+  '<path d="M10 50a40 40 0 0 1 80 0z" fill="#e3350d" stroke="#333" stroke-width="5"/><circle cx="50" cy="50" r="11" fill="#fff" stroke="#333" stroke-width="5"/></svg>');
+
+/* ---------------------------- 遊戲資料 ---------------------------- */
+const TYPE_COLOR = {
+  "一般":"#A8A878","火":"#F08030","水":"#6890F0","草":"#78C850","電":"#F8D030","冰":"#98D8D8",
+  "格鬥":"#C03028","毒":"#A040A0","地面":"#E0C068","飛行":"#A890F0","超能力":"#F85888","蟲":"#A8B820",
+  "岩石":"#B8A038","幽靈":"#705898","龍":"#7038F8",
+};
+
+// 攻擊屬性 -> {防守屬性: 倍率}，未列出者為 1 倍
+const TYPE_CHART = {
+  "一般":{"岩石":.5,"幽靈":0},
+  "火":{"火":.5,"水":.5,"草":2,"冰":2,"蟲":2,"岩石":.5,"龍":.5},
+  "水":{"火":2,"水":.5,"草":.5,"地面":2,"岩石":2,"龍":.5},
+  "電":{"水":2,"電":.5,"草":.5,"地面":0,"飛行":2,"龍":.5},
+  "草":{"火":.5,"水":2,"草":.5,"毒":.5,"地面":2,"飛行":.5,"蟲":.5,"岩石":2,"龍":.5},
+  "冰":{"火":.5,"水":.5,"草":2,"冰":.5,"地面":2,"飛行":2,"龍":2},
+  "格鬥":{"一般":2,"冰":2,"毒":.5,"飛行":.5,"超能力":.5,"蟲":.5,"岩石":2,"幽靈":0},
+  "毒":{"草":2,"毒":.5,"地面":.5,"岩石":.5,"幽靈":.5},
+  "地面":{"火":2,"電":2,"草":.5,"毒":2,"飛行":0,"蟲":.5,"岩石":2},
+  "飛行":{"電":.5,"草":2,"格鬥":2,"蟲":2,"岩石":.5},
+  "超能力":{"格鬥":2,"毒":2,"超能力":.5},
+  "蟲":{"火":.5,"草":2,"格鬥":.5,"毒":.5,"飛行":.5,"超能力":2,"幽靈":.5},
+  "岩石":{"火":2,"冰":2,"格鬥":.5,"地面":.5,"飛行":2,"蟲":2},
+  "幽靈":{"一般":0,"幽靈":2,"超能力":2},
+  "龍":{"龍":2},
+};
+
+// 招式：[屬性, 威力, 命中率]
+const MOVES = {
+  "撞擊":["一般",40,100],"抓":["一般",40,100],"拍擊":["一般",40,100],"電光一閃":["一般",40,100],
+  "咬住":["一般",60,100],"泰山壓頂":["一般",85,100],"猛撞":["一般",90,85],"破壞死光":["一般",120,80],
+  "火花":["火",40,100],"噴射火焰":["火",90,100],"大字爆炎":["火",110,85],
+  "水槍":["水",40,100],"泡沫光線":["水",65,100],"水砲":["水",110,80],
+  "藤鞭":["草",45,100],"飛葉快刀":["草",55,95],"日光束":["草",120,85],
+  "電擊":["電",40,100],"十萬伏特":["電",90,100],"打雷":["電",110,70],
+  "冰凍光束":["冰",90,100],
+  "空手劈":["格鬥",50,100],"十字劈":["格鬥",100,80],
+  "毒針":["毒",35,100],"污泥炸彈":["毒",90,100],
+  "挖洞":["地面",80,100],"地震":["地面",100,100],
+  "起風":["飛行",40,100],"翅膀攻擊":["飛行",60,100],
+  "念力":["超能力",50,100],"精神強念":["超能力",90,100],
+  "蟲咬":["蟲",60,100],
+  "落石":["岩石",50,90],"岩崩":["岩石",75,90],
+  "舌舔":["幽靈",30,100],"暗影球":["幽靈",80,100],
+  "龍息":["龍",60,100],"龍爪":["龍",80,100],
+};
+
+// 招式學習表：[等級, 招式]
+const L_BULBA=[[1,"撞擊"],[3,"藤鞭"],[9,"毒針"],[15,"飛葉快刀"],[24,"污泥炸彈"],[36,"日光束"]];
+const L_CHAR=[[1,"抓"],[4,"火花"],[12,"龍息"],[17,"咬住"],[28,"噴射火焰"],[36,"龍爪"],[44,"大字爆炎"]];
+const L_SQUIR=[[1,"撞擊"],[4,"水槍"],[10,"咬住"],[16,"泡沫光線"],[25,"冰凍光束"],[40,"水砲"]];
+const L_CATER=[[1,"撞擊"],[7,"蟲咬"]];
+const L_BUTTER=[[1,"撞擊"],[7,"蟲咬"],[10,"念力"],[14,"起風"],[24,"精神強念"]];
+const L_PIDGEY=[[1,"撞擊"],[5,"起風"],[13,"電光一閃"],[21,"翅膀攻擊"],[33,"猛撞"]];
+const L_RAT=[[1,"撞擊"],[4,"電光一閃"],[10,"咬住"],[20,"挖洞"],[30,"猛撞"]];
+const L_PIKA=[[1,"電擊"],[1,"電光一閃"],[18,"十萬伏特"],[30,"猛撞"],[40,"打雷"]];
+const L_JIGGLY=[[1,"拍擊"],[14,"泰山壓頂"],[30,"冰凍光束"]];
+const L_ZUBAT=[[1,"起風"],[1,"毒針"],[10,"咬住"],[18,"翅膀攻擊"],[30,"污泥炸彈"]];
+const L_DIG=[[1,"抓"],[8,"挖洞"],[19,"岩崩"],[30,"地震"]];
+const L_MEOWTH=[[1,"抓"],[6,"咬住"],[15,"電光一閃"],[25,"猛撞"]];
+const L_PSY=[[1,"抓"],[5,"水槍"],[15,"念力"],[25,"泡沫光線"],[35,"水砲"]];
+const L_GROWL=[[1,"咬住"],[10,"火花"],[25,"噴射火焰"],[40,"大字爆炎"]];
+const L_POLI=[[1,"水槍"],[7,"拍擊"],[19,"泡沫光線"],[30,"泰山壓頂"]];
+const L_ABRA=[[1,"念力"],[18,"暗影球"],[26,"精神強念"]];
+const L_MACHOP=[[1,"撞擊"],[1,"空手劈"],[15,"落石"],[30,"十字劈"],[35,"地震"]];
+const L_GEO=[[1,"撞擊"],[6,"落石"],[15,"挖洞"],[25,"岩崩"],[36,"地震"]];
+const L_GASTLY=[[1,"舌舔"],[10,"毒針"],[20,"暗影球"],[30,"污泥炸彈"]];
+const L_ONIX=[[1,"撞擊"],[1,"落石"],[19,"岩崩"],[40,"地震"]];
+const L_MAGI=[[1,"撞擊"]];
+const L_GYARA=[[1,"撞擊"],[1,"水槍"],[20,"咬住"],[25,"龍息"],[32,"水砲"],[41,"破壞死光"]];
+const L_EEVEE=[[1,"撞擊"],[8,"電光一閃"],[16,"咬住"],[30,"猛撞"]];
+const L_SNOR=[[1,"撞擊"],[1,"咬住"],[10,"泰山壓頂"],[35,"破壞死光"]];
+const L_DRAT=[[1,"撞擊"],[5,"龍息"],[25,"冰凍光束"],[30,"龍爪"],[45,"破壞死光"]];
+const L_MEW=[[1,"念力"],[1,"精神強念"],[50,"暗影球"],[55,"冰凍光束"],[60,"十萬伏特"]];
+
+// base = [HP, 攻擊, 防禦, 速度]；evo = [進化等級, 進化後編號]
+function sp(name, types, base, learn, evo = null, capture = 45) {
+  return { name, types, base, learn: [...learn].sort((a, b) => a[0] - b[0]), evo, capture };
+}
+const SPECIES = {
+  1:sp("妙蛙種子",["草","毒"],[45,49,49,45],L_BULBA,[16,2]),
+  2:sp("妙蛙草",["草","毒"],[60,62,63,60],L_BULBA,[32,3]),
+  3:sp("妙蛙花",["草","毒"],[80,82,83,80],L_BULBA),
+  4:sp("小火龍",["火"],[39,52,43,65],L_CHAR,[16,5]),
+  5:sp("火恐龍",["火"],[58,64,58,80],L_CHAR,[36,6]),
+  6:sp("噴火龍",["火","飛行"],[78,84,78,100],[...L_CHAR,[36,"翅膀攻擊"]]),
+  7:sp("傑尼龜",["水"],[44,48,65,43],L_SQUIR,[16,8]),
+  8:sp("卡咪龜",["水"],[59,63,80,58],L_SQUIR,[36,9]),
+  9:sp("水箭龜",["水"],[79,83,100,78],L_SQUIR),
+  10:sp("綠毛蟲",["蟲"],[45,30,35,45],L_CATER,[7,11],255),
+  11:sp("鐵甲蛹",["蟲"],[50,20,55,30],L_CATER,[10,12],120),
+  12:sp("巴大蝶",["蟲","飛行"],[60,70,50,70],L_BUTTER),
+  16:sp("波波",["一般","飛行"],[40,45,40,56],L_PIDGEY,[18,17],255),
+  17:sp("比比鳥",["一般","飛行"],[63,60,55,71],L_PIDGEY,[36,18],120),
+  18:sp("比雕",["一般","飛行"],[83,80,75,101],L_PIDGEY),
+  19:sp("小拉達",["一般"],[30,56,35,72],L_RAT,[20,20],255),
+  20:sp("拉達",["一般"],[55,81,60,97],L_RAT,null,127),
+  25:sp("皮卡丘",["電"],[35,55,40,90],L_PIKA,[30,26],190),
+  26:sp("雷丘",["電"],[60,90,55,110],L_PIKA,null,75),
+  39:sp("胖丁",["一般"],[115,45,20,20],L_JIGGLY,null,170),
+  41:sp("超音蝠",["毒","飛行"],[40,45,35,55],L_ZUBAT,[22,42],255),
+  42:sp("大嘴蝠",["毒","飛行"],[75,80,70,90],L_ZUBAT,null,90),
+  50:sp("地鼠",["地面"],[10,55,25,95],L_DIG,[26,51],255),
+  51:sp("三地鼠",["地面"],[35,80,50,120],L_DIG,null,50),
+  52:sp("喵喵",["一般"],[40,45,35,90],L_MEOWTH,null,255),
+  54:sp("可達鴨",["水"],[50,60,48,55],L_PSY,null,190),
+  58:sp("卡蒂狗",["火"],[55,70,45,60],L_GROWL,null,190),
+  60:sp("蚊香蝌蚪",["水"],[40,50,40,90],L_POLI,null,255),
+  63:sp("凱西",["超能力"],[25,80,15,90],L_ABRA,[16,64],200),
+  64:sp("勇基拉",["超能力"],[40,95,30,105],L_ABRA,null,100),
+  66:sp("腕力",["格鬥"],[70,80,50,35],L_MACHOP,null,180),
+  74:sp("小拳石",["岩石","地面"],[40,80,100,20],L_GEO,[25,75],255),
+  75:sp("隆隆石",["岩石","地面"],[55,95,115,35],L_GEO,null,120),
+  92:sp("鬼斯",["幽靈","毒"],[30,75,35,80],L_GASTLY,[25,93],190),
+  93:sp("鬼斯通",["幽靈","毒"],[45,90,45,95],L_GASTLY,null,90),
+  95:sp("大岩蛇",["岩石","地面"],[35,45,160,70],L_ONIX),
+  129:sp("鯉魚王",["水"],[20,10,55,80],L_MAGI,[20,130],255),
+  130:sp("暴鯉龍",["水","飛行"],[95,125,79,81],L_GYARA),
+  133:sp("伊布",["一般"],[55,55,50,55],L_EEVEE),
+  143:sp("卡比獸",["一般"],[160,110,65,30],L_SNOR,null,25),
+  147:sp("迷你龍",["龍"],[41,64,45,50],L_DRAT,[30,148]),
+  148:sp("哈克龍",["龍"],[61,84,65,70],L_DRAT,[55,149]),
+  149:sp("快龍",["龍","飛行"],[91,134,95,80],[...L_DRAT,[55,"翅膀攻擊"]]),
+  150:sp("超夢",["超能力"],[106,130,90,130],L_MEW,null,3),
+};
+const SPECIES_IDS = Object.keys(SPECIES).map(Number).sort((a, b) => a - b);
+const STARTERS = [1, 4, 7, 25];
+
+// 區域：需要徽章數、等級範圍、出現的寶可夢 [編號, 權重]
+const AREAS = [
+  {name:"🌲 常青森林",req:0,lv:[2,6],desc:"新手訓練家的第一站，蟲和鳥很多。",mons:[[10,30],[16,30],[19,30],[25,8]]},
+  {name:"⛰️ 月見山",req:0,lv:[7,13],desc:"陰暗的洞窟，小心超音蝠。",mons:[[41,35],[74,30],[39,15],[50,15],[66,10]]},
+  {name:"🌊 華藍海岸",req:1,lv:[12,20],desc:"陽光沙灘，水系寶可夢的天堂。",mons:[[129,30],[60,25],[54,20],[52,15],[58,10]]},
+  {name:"🏚️ 紫苑塔",req:2,lv:[18,28],desc:"傳說有幽靈出沒的高塔……",mons:[[92,40],[63,20],[95,15],[133,10],[93,5]]},
+  {name:"🐉 龍之谷",req:3,lv:[28,40],desc:"強大的龍系寶可夢棲息之地。",mons:[[147,30],[148,10],[130,15],[143,10],[42,20],[51,15]]},
+  {name:"❓ 未知洞窟",req:4,lv:[45,60],desc:"只有冠軍才能進入，據說有傳說中的寶可夢。",mons:[[150,5],[149,20],[64,25],[93,25],[75,25]]},
+];
+
+const GYMS = [
+  {name:"尼比道館",leader:"小剛",badge:"灰色徽章",reward:1500,team:[[74,12],[95,14]]},
+  {name:"華藍道館",leader:"小霞",badge:"藍色徽章",reward:2500,team:[[60,18],[54,21]]},
+  {name:"枯葉道館",leader:"馬志士",badge:"橙色徽章",reward:3500,team:[[25,25],[25,26],[26,29]]},
+  {name:"冠軍之路",leader:"冠軍阿渡",badge:"冠軍獎盃",reward:8000,team:[[130,38],[148,38],[6,40],[149,45]]},
+];
+
+const SHOP = {"精靈球":200,"超級球":600,"高級球":1200,"傷藥":300,"全滿藥":1500,"活力碎片":1500};
+const SHOP_DESC = {"精靈球":"基本的捕捉道具","超級球":"捕捉率 ×1.5","高級球":"捕捉率 ×2",
+  "傷藥":"回復 50 HP","全滿藥":"HP 全滿","活力碎片":"讓倒下的寶可夢復活（一半 HP）"};
+const BALLS = {"精靈球":1,"超級球":1.5,"高級球":2,"大師球":0};
+const HEAL_ITEMS = ["傷藥","全滿藥","活力碎片"];
+const SAVE_KEY = "pokemon-adventure-save-v1";
+
+/* ---------------------------- 工具函式 ---------------------------- */
+const randint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function weighted(pairs) {
+  let r = Math.random() * pairs.reduce((s, p) => s + p[1], 0);
+  for (const [v, w] of pairs) if ((r -= w) < 0) return v;
+  return pairs[pairs.length - 1][0];
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const bold = s => s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+
+/* ---------------------------- 遊戲狀態 ---------------------------- */
+function freshState() {
+  return {started:false, player:"", money:3000, badges:0, party:[], box:[],
+    bag:{"精靈球":5,"超級球":0,"高級球":0,"大師球":0,"傷藥":3,"全滿藥":0,"活力碎片":0},
+    seen:[], caught:[], battle:null};
+}
+let G = loadSaved();
+let tab = "explore";
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && Array.isArray(d.party)) return Object.assign(freshState(), d);
+    }
+  } catch (e) { /* 無痕模式或被封鎖時忽略 */ }
+  return freshState();
+}
+function save() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* 忽略 */ }
+}
+
+/* ---------------------------- 寶可夢邏輯 ---------------------------- */
+const nm = m => SPECIES[m.sid].name;
+const tp = m => SPECIES[m.sid].types;
+
+function stats(m) {
+  const [hp, atk, df, spd] = SPECIES[m.sid].base, L = m.lvl;
+  return {hp: Math.floor(hp * 2 * L / 100) + L + 10, atk: Math.floor(atk * 2 * L / 100) + 5,
+          def: Math.floor(df * 2 * L / 100) + 5, spd: Math.floor(spd * 2 * L / 100) + 5};
+}
+const xpNeed = lvl => 8 * lvl + 20;
+
+function effectiveness(mtype, defTypes) {
+  let mult = 1;
+  for (const t of defTypes) { const v = (TYPE_CHART[mtype] || {})[t]; if (v !== undefined) mult *= v; }
+  return mult;
+}
+
+function newMon(sid, lvl) {
+  const moves = [];
+  for (const [l, mv] of SPECIES[sid].learn) if (l <= lvl && !moves.includes(mv)) moves.push(mv);
+  const m = {sid, lvl, xp: 0, moves: moves.slice(-4)};
+  m.hp = stats(m).hp;
+  return m;
+}
+
+function register(sid, caught = false) {
+  if (!G.seen.includes(sid)) G.seen.push(sid);
+  if (caught && !G.caught.includes(sid)) G.caught.push(sid);
+}
+
+function log(msg) {
+  if (G.battle) G.battle.log.push(msg); else toast(msg);
+}
+
+function learnMoves(m) {
+  for (const [l, mv] of SPECIES[m.sid].learn) {
+    if (l !== m.lvl || m.moves.includes(mv)) continue;
+    if (m.moves.length < 4) {
+      m.moves.push(mv);
+      log(`📘 ${nm(m)} 學會了 **${mv}**！`);
+    } else {
+      const weakest = m.moves.reduce((a, b) => MOVES[b][1] < MOVES[a][1] ? b : a);
+      if (MOVES[mv][1] > MOVES[weakest][1]) {
+        m.moves[m.moves.indexOf(weakest)] = mv;
+        log(`📘 ${nm(m)} 忘記了 ${weakest}，學會了 **${mv}**！`);
+      }
+    }
+  }
+}
+
+function checkEvo(m) {
+  const evo = SPECIES[m.sid].evo;
+  if (evo && m.lvl >= evo[0]) {
+    const oldName = nm(m), oldMax = stats(m).hp;
+    m.sid = evo[1];
+    m.hp += stats(m).hp - oldMax;
+    log(`✨ 咦？${oldName} 進化成了 **${nm(m)}**！`);
+    register(m.sid, true);
+    learnMoves(m);
+  }
+}
+
+function gainXp(m, amount) {
+  m.xp += amount;
+  while (m.lvl < 100 && m.xp >= xpNeed(m.lvl)) {
+    m.xp -= xpNeed(m.lvl);
+    const oldMax = stats(m).hp;
+    m.lvl += 1;
+    m.hp += stats(m).hp - oldMax;
+    log(`⬆️ ${nm(m)} 升到了 Lv.${m.lvl}！`);
+    learnMoves(m);
+    checkEvo(m);
+  }
+}
+
+function healAll() { for (const m of [...G.party, ...G.box]) m.hp = stats(m).hp; }
+function firstAlive() { const i = G.party.findIndex(m => m.hp > 0); return i < 0 ? null : i; }
+
+// 使用回復道具，成功回傳訊息，無效回傳 null
+function applyHeal(m, item) {
+  const mx = stats(m).hp;
+  if (item === "活力碎片") {
+    if (m.hp > 0) return null;
+    m.hp = Math.floor(mx / 2);
+    return `${nm(m)} 恢復了意識！`;
+  }
+  if (m.hp <= 0 || m.hp >= mx) return null;
+  const before = m.hp;
+  m.hp = item === "全滿藥" ? mx : Math.min(mx, m.hp + 50);
+  return `${nm(m)} 回復了 ${m.hp - before} HP。`;
+}
+
+/* ---------------------------- 戰鬥 ---------------------------- */
+const foe = () => G.battle.enemies[G.battle.ei];
+const me = () => G.party[G.battle.active];
+const foePrefix = () => G.battle.kind === "wild" ? "野生的" : `${G.battle.leader}的`;
+
+function calcDamage(att, dfn, move) {
+  const [mtype, power, acc] = MOVES[move];
+  if (randint(1, 100) > acc) return null;
+  const a = stats(att).atk, d = stats(dfn).def;
+  const base = ((2 * att.lvl / 5 + 2) * power * a / d) / 50 + 2;
+  const stab = tp(att).includes(mtype) ? 1.5 : 1;
+  const eff = effectiveness(mtype, tp(dfn));
+  const crit = Math.random() < 1 / 16;
+  let dmg = Math.floor(base * stab * eff * (crit ? 1.5 : 1) * (0.85 + Math.random() * 0.15));
+  if (eff > 0) dmg = Math.max(1, dmg);
+  return {dmg, eff, crit};
+}
+
+function attack(att, dfn, move, isPlayer) {
+  log(`${isPlayer ? "我方的" : foePrefix()} ${nm(att)} 使用了 **${move}**！`);
+  const res = calcDamage(att, dfn, move);
+  if (!res) { log("但是沒有命中！"); return; }
+  if (res.eff === 0) { log(`對 ${nm(dfn)} 好像沒有效果……`); return; }
+  dfn.hp = Math.max(0, dfn.hp - res.dmg);
+  G.battle.anim[isPlayer ? "foe" : "me"] = true;
+  if (res.crit) log("💥 擊中要害！");
+  if (res.eff > 1) log("🔥 效果絕佳！");
+  else if (res.eff < 1) log("效果不太好……");
+  log(`造成了 ${res.dmg} 點傷害。`);
+}
+
+function enemyChoose(f, m) {
+  if (Math.random() < 0.6) {
+    const score = mv => { const [t, p] = MOVES[mv]; return p * effectiveness(t, tp(m)) * (tp(f).includes(t) ? 1.5 : 1); };
+    return f.moves.reduce((a, b) => score(b) > score(a) ? b : a);
+  }
+  return pick(f.moves);
+}
+
+function startBattle(kind, enemies, intro, leader = null, gym = null) {
+  G.battle = {kind, enemies, ei: 0, active: firstAlive(), log: [intro], shown: 0,
+              mustSwitch: false, over: false, result: null, leader, gym, anim: {foe: false, me: false}};
+  register(enemies[0].sid);
+  log(`上吧！${nm(me())}！`);
+}
+
+function resolve() {
+  if (foe().hp <= 0) enemyFainted();
+  else if (me().hp <= 0) playerFainted();
+}
+
+function enemyTurn() {
+  const f = foe(), m = me();
+  attack(f, m, enemyChoose(f, m), false);
+  resolve();
+}
+
+function enemyFainted() {
+  const b = G.battle, f = foe(), m = me();
+  log(`${foePrefix()} ${nm(f)} 倒下了！`);
+  const baseSum = SPECIES[f.sid].base.reduce((a, c) => a + c, 0);
+  const gain = Math.floor(Math.floor(baseSum / 3) * f.lvl / 7 * (b.kind === "trainer" ? 1.5 : 1));
+  log(`${nm(m)} 獲得了 ${gain} 點經驗值。`);
+  gainXp(m, gain);
+  const share = Math.floor(gain * 3 / 10);
+  const others = G.party.filter((o, j) => j !== b.active && o.hp > 0);
+  if (others.length && share > 0) {
+    log(`其他隊員透過學習裝置各獲得了 ${share} 點經驗值。`);
+    for (const o of others) gainXp(o, share);
+  }
+  if (b.ei + 1 < b.enemies.length) {
+    b.ei += 1;
+    register(foe().sid);
+    log(`${b.leader} 派出了 **${nm(foe())}** (Lv.${foe().lvl})！`);
+  } else {
+    win();
+  }
+}
+
+function win() {
+  const b = G.battle;
+  b.over = true; b.result = "win";
+  if (b.kind === "wild") {
+    const money = b.enemies[b.enemies.length - 1].lvl * 10;
+    G.money += money;
+    log(`💰 撿到了 ${money} 元。`);
+    return;
+  }
+  const gym = GYMS[b.gym];
+  G.money += gym.reward;
+  log(`🏆 你打敗了 ${gym.leader}！獲得 ${gym.reward} 元。`);
+  if (G.badges === b.gym) {
+    G.badges += 1;
+    log(`🎖️ 獲得了 **${gym.badge}**！`);
+    if (b.gym === GYMS.length - 1) {
+      G.bag["大師球"] = (G.bag["大師球"] || 0) + 1;
+      log("🎁 獲得了 **大師球** ×1！");
+      log("🎉🎉 恭喜你成為寶可夢聯盟冠軍！「未知洞窟」已經開放！");
+    }
+  }
+}
+
+function playerFainted() {
+  const b = G.battle;
+  log(`我方的 ${nm(me())} 倒下了！`);
+  if (firstAlive() !== null) {
+    b.mustSwitch = true;
+    log("請選擇下一隻寶可夢！");
+  } else {
+    const lost = Math.floor(G.money / 2);
+    G.money -= lost;
+    log(`💀 你的寶可夢全部倒下了……慌亂中掉了 ${lost} 元，被送回了寶可夢中心。`);
+    healAll();
+    b.over = true; b.result = "lose";
+  }
+}
+
+/* ---------------------------- 玩家動作 ---------------------------- */
+const A = {
+  start(sid) {
+    G.player = (document.getElementById("nameInput").value || "").trim().slice(0, 12) || "小智";
+    G.party = [newMon(sid, 5)];
+    register(sid, true);
+    G.started = true;
+    tab = "explore";
+    toast(`你選擇了 ${SPECIES[sid].name}！冒險開始！`);
+  },
+  tab(t) { tab = t; },
+
+  wild(i) {
+    if (firstAlive() === null) { toast("你的寶可夢都倒下了，先去寶可夢中心吧！"); return; }
+    const area = AREAS[i];
+    const sid = weighted(area.mons), lvl = randint(area.lv[0], area.lv[1]);
+    startBattle("wild", [newMon(sid, lvl)], `野生的 **${SPECIES[sid].name}** (Lv.${lvl}) 跳出來了！`);
+  },
+  gym(i) {
+    if (firstAlive() === null) { toast("你的寶可夢都倒下了，先去寶可夢中心吧！"); return; }
+    const gym = GYMS[i];
+    const enemies = gym.team.map(([sid, lv]) => newMon(sid, lv));
+    startBattle("trainer", enemies,
+      `**${gym.leader}** 向你發起挑戰！${gym.leader} 派出了 **${nm(enemies[0])}** (Lv.${enemies[0].lvl})！`,
+      gym.leader, i);
+  },
+
+  move(i) {
+    const m = me(), f = foe();
+    const mv = m.moves[i], fmv = enemyChoose(f, m);
+    const ms = stats(m).spd, fs = stats(f).spd;
+    if (ms > fs || (ms === fs && Math.random() < 0.5)) {
+      attack(m, f, mv, true);
+      if (f.hp > 0) attack(f, m, fmv, false);
+    } else {
+      attack(f, m, fmv, false);
+      if (m.hp > 0) attack(m, f, mv, true);
+    }
+    resolve();
+  },
+  ball(ball) {
+    const b = G.battle, f = foe();
+    if (b.kind !== "wild" || (G.bag[ball] || 0) <= 0) return;
+    G.bag[ball] -= 1;
+    log(`你丟出了 ${ball}！`);
+    let p = 1;
+    if (ball !== "大師球") {
+      const mx = stats(f).hp;
+      p = Math.min(1, (3 * mx - 2 * f.hp) * SPECIES[f.sid].capture * BALLS[ball] / (3 * mx) / 255);
+    }
+    if (Math.random() < p) {
+      log(`🎉 抓到了 **${nm(f)}**！`);
+      register(f.sid, true);
+      if (G.party.length < 6) G.party.push(f);
+      else { G.box.push(f); log("隊伍已滿，已傳送到電腦箱。"); }
+      b.over = true; b.result = "catch";
+    } else {
+      log(pick(["哎呀！寶可夢掙脫了！", "可惡！差一點就抓到了！", "看起來快要抓到了……"]));
+      enemyTurn();
+    }
+  },
+  item(item) {
+    if ((G.bag[item] || 0) <= 0) return;
+    const msg = applyHeal(me(), item);
+    if (!msg) { log(`現在使用 ${item} 不會有效果。`); return; }
+    G.bag[item] -= 1;
+    log(`使用了 ${item}，${msg}`);
+    enemyTurn();
+  },
+  sw(i) {
+    const b = G.battle;
+    if (i === b.active || G.party[i].hp <= 0) return;
+    if (b.mustSwitch) {
+      b.active = i; b.mustSwitch = false;
+      log(`上吧！${nm(me())}！`);
+    } else {
+      log(`回來吧，${nm(me())}！上吧，${nm(G.party[i])}！`);
+      b.active = i;
+      enemyTurn();
+    }
+  },
+  run() {
+    const b = G.battle;
+    if (b.kind !== "wild") { log("不能從訓練家對戰中逃跑！"); return; }
+    if (stats(me()).spd >= stats(foe()).spd || Math.random() < 0.5) {
+      log("順利逃走了！"); b.over = true; b.result = "run";
+    } else {
+      log("逃跑失敗！"); enemyTurn();
+    }
+  },
+  leave() { G.battle = null; },
+
+  heal() { healAll(); toast("👩‍⚕️ 你的寶可夢都恢復健康了！歡迎再來！"); },
+  buy(item, qty) {
+    const cost = SHOP[item] * qty;
+    if (G.money < cost) { toast("錢不夠喔！"); return; }
+    G.money -= cost;
+    G.bag[item] = (G.bag[item] || 0) + qty;
+    toast(`買了 ${item} ×${qty}`);
+  },
+  lead(i) { G.party.unshift(G.party.splice(i, 1)[0]); },
+  dep(i) { if (G.party.length > 1) G.box.push(G.party.splice(i, 1)[0]); },
+  wd(i) { if (G.party.length < 6) G.party.push(G.box.splice(i, 1)[0]); },
+  rel(i) {
+    if (!confirm(`確定要放生 ${nm(G.box[i])} 嗎？`)) return;
+    toast(`你放生了 ${nm(G.box.splice(i, 1)[0])}，再見了！`);
+  },
+  use(item, i) {
+    const msg = applyHeal(G.party[i], item);
+    if (!msg) { toast(`現在使用 ${item} 不會有效果。`); return; }
+    G.bag[item] -= 1;
+    toast(msg);
+  },
+  exportSave() {
+    const blob = new Blob([JSON.stringify(G, null, 1)], {type: "application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `pokemon_save_${G.player || "trainer"}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  },
+  importSave() { document.getElementById("fileInput").click(); },
+  reset() {
+    if (!confirm("確定要刪除目前進度、重新開始嗎？")) return;
+    G = freshState(); tab = "explore";
+  },
+};
+
+document.getElementById("fileInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = JSON.parse(reader.result);
+      if (!d || !Array.isArray(d.party)) throw new Error("bad");
+      G = Object.assign(freshState(), d, {battle: null});
+      toast("讀檔成功！");
+    } catch (err) {
+      toast("存檔檔案格式錯誤。");
+    }
+    e.target.value = "";
+    render();
+  };
+  reader.readAsText(file);
+});
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el || el.disabled) return;
+  const args = el.dataset.arg ? JSON.parse(el.dataset.arg) : [];
+  A[el.dataset.act](...args);
+  render();
+});
+
+// 戰鬥中可用數字鍵 1–4 出招
+document.addEventListener("keydown", e => {
+  const b = G.battle;
+  if (!b || b.over || b.mustSwitch || e.target.tagName === "INPUT") return;
+  const i = Number(e.key) - 1;
+  if (i >= 0 && i < me().moves.length) { A.move(i); render(); }
+});
+
+/* ---------------------------- 畫面 ---------------------------- */
+function toast(msg) {
+  const box = document.getElementById("toasts");
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = bold(esc(msg));
+  box.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function btn(label, act, args = [], {cls = "", disabled = false, style = ""} = {}) {
+  return `<button class="${cls}" data-act="${act}" data-arg='${JSON.stringify(args)}'` +
+         `${disabled ? " disabled" : ""}${style ? ` style="${style}"` : ""}>${label}</button>`;
+}
+const img = (src, cls = "", w = "") =>
+  `<img class="${cls}" src="${src}" alt="" ${w ? `width="${w}" height="${w}"` : ""} loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">`;
+const typeBadges = ts => ts.map(t => `<span class="tb" style="background:${TYPE_COLOR[t]}">${t}</span>`).join("");
+
+function hpBar(m) {
+  const mx = stats(m).hp, pct = mx ? m.hp / mx * 100 : 0;
+  const color = pct > 50 ? "#4caf50" : pct > 20 ? "#ffc107" : "#f44336";
+  return `<div class="hpwrap"><div class="hpfill" style="width:${pct.toFixed(0)}%;background:${color}"></div></div>` +
+         `<div class="muted">HP ${m.hp} / ${mx}</div>`;
+}
+const monHeader = m => `<b>${nm(m)}</b>&nbsp; Lv.${m.lvl}<br>${typeBadges(tp(m))}${hpBar(m)}`;
+
+function render() {
+  if (!G.started) renderStart();
+  else if (G.battle) renderBattle();
+  else renderMap();
+  save();
+}
+
+function renderStart() {
+  let h = `<h1>⚡ 寶可夢冒險</h1>
+    <div class="panel">
+      <p>歡迎來到寶可夢的世界！我是大木博士。首先，請告訴我你的名字。</p>
+      <input type="text" id="nameInput" maxlength="12" placeholder="小智">
+      <p>接著，從下面挑選你的第一隻寶可夢吧！</p>
+      <div class="grid4">`;
+  for (const sid of STARTERS) {
+    const s = SPECIES[sid];
+    h += `<div class="panel starter">${img(SPRITE(sid), "", 96)}<div><b>${s.name}</b></div>
+          <div>${typeBadges(s.types)}</div><div style="margin-top:8px">${btn("就決定是你了！", "start", [sid], {cls: "primary full"})}</div></div>`;
+  }
+  h += `</div></div>
+    <div class="panel"><b>📂 已經有存檔？</b><p class="muted">可以讀取從其他電腦下載的存檔檔案。</p>${btn("讀取存檔檔案", "importSave")}</div>`;
+  document.getElementById("app").innerHTML = h + footer();
+}
+
+function renderBattle() {
+  const b = G.battle, f = foe(), m = me();
+  const title = b.kind === "wild" ? "野生寶可夢對戰" : `🏟️ ${GYMS[b.gym].name} — ${b.leader}`;
+  let h = `<h2>${title}</h2>`;
+  if (b.kind === "trainer") {
+    const left = b.enemies.length - b.ei;
+    h += `<p class="muted">對手剩餘寶可夢：${"🔴".repeat(left)}${"⚫".repeat(b.enemies.length - left)}</p>`;
+  }
+  const fCls = f.hp <= 0 ? "fainted" : b.anim.foe ? "hit" : "";
+  const mCls = m.hp <= 0 ? "fainted" : b.anim.me ? "hit" : "";
+  const need = xpNeed(m.lvl);
+  h += `<div class="arena">
+      <div class="card">${monHeader(f)}</div>
+      ${img(SPRITE(f.sid), "sprite " + fCls)}
+      ${img(SPRITE_BACK(m.sid), "sprite " + mCls)}
+      <div class="card">${monHeader(m)}
+        <div class="xpwrap"><div class="xpfill" style="width:${Math.min(100, m.xp / need * 100).toFixed(0)}%"></div></div>
+        <div class="muted">EXP ${m.xp} / ${need}</div></div>
+    </div>`;
+  b.anim = {foe: false, me: false};
+
+  if (b.over) {
+    const label = {win: "勝利！繼續冒險", catch: "太好了！繼續冒險", run: "繼續冒險", lose: "回到寶可夢中心"}[b.result];
+    h += btn(label, "leave", [], {cls: "primary full"});
+  } else if (b.mustSwitch) {
+    h += `<h3>⚠️ 選擇下一隻上場的寶可夢：</h3>${switchButtons(b)}`;
+  } else {
+    h += `<h3>⚔️ 招式 <span class="muted">（點擊即攻擊，也可按數字鍵 1–4）</span></h3><div class="grid2">`;
+    m.moves.forEach((mv, i) => {
+      const [t, p, acc] = MOVES[mv];
+      const eff = effectiveness(t, tp(f));
+      const hint = eff > 1 ? " ⬆️效果絕佳" : eff === 0 ? " ✖️沒效果" : eff < 1 ? " ⬇️效果不好" : "";
+      h += btn(`${i + 1}. <b>${mv}</b><small>${t}｜威力 ${p}｜命中 ${acc}${hint}</small>`, "move", [i],
+               {cls: "move", style: `--tc:${TYPE_COLOR[t]}`});
+    });
+    h += `</div><h3>🎒 背包 <span class="muted">（數量 0 的道具無法使用）</span></h3>`;
+    if (b.kind === "wild") {
+      h += `<div class="grid4">` + Object.keys(BALLS).map(ball =>
+        btn(`${ball} ×${G.bag[ball] || 0}`, "ball", [ball], {disabled: (G.bag[ball] || 0) <= 0})).join("") + `</div><div style="height:8px"></div>`;
+    }
+    h += `<div class="grid3">` + ["傷藥", "全滿藥"].map(item =>
+      btn(`${item} ×${G.bag[item] || 0}`, "item", [item], {disabled: (G.bag[item] || 0) <= 0})).join("") +
+      btn("🏃 逃跑", "run", [], {disabled: b.kind !== "wild"}) + `</div>`;
+    if (G.party.length > 1) h += `<h3>🔄 換寶可夢 <span class="muted">（會被對手攻擊一次）</span></h3>${switchButtons(b)}`;
+  }
+
+  const lines = b.log.slice(-10);
+  const newFrom = lines.length - (b.log.length - b.shown);
+  h += `<h3>📜 戰鬥訊息</h3><div class="log">` +
+       lines.map((l, k) => `<div class="${k >= newFrom ? "new" : ""}">${bold(l)}</div>`).join("") + `</div>`;
+  b.shown = b.log.length;
+  document.getElementById("app").innerHTML = h + footer();
+}
+
+function switchButtons(b) {
+  return `<div class="grid3">` + G.party.map((p, i) =>
+    btn(`${nm(p)} Lv.${p.lvl}<br><span class="muted">${p.hp}/${stats(p).hp}</span>`, "sw", [i],
+        {disabled: i === b.active || p.hp <= 0})).join("") + `</div>`;
+}
+
+const TABS = [["explore","🗺️ 探索"],["gym","🏟️ 道館"],["center","🏥 中心"],["shop","🛒 商店"],
+              ["party","🎒 隊伍"],["box","💻 電腦"],["dex","📖 圖鑑"],["save","💾 存檔"]];
+
+function renderMap() {
+  let h = `<h1>⚡ 寶可夢冒險</h1>
+    <div class="stats">
+      <div class="stat"><span class="muted">訓練家</span><b>${esc(G.player)}</b></div>
+      <div class="stat"><span class="muted">金錢</span><b>₽${G.money.toLocaleString()}</b></div>
+      <div class="stat"><span class="muted">徽章</span><b>${"🎖️".repeat(G.badges) || "—"} ${G.badges}/${GYMS.length}</b></div>
+    </div>
+    <div class="tabs">${TABS.map(([k, label]) => btn(label, "tab", [k], {cls: tab === k ? "on" : ""})).join("")}</div>`;
+  h += ({explore: viewExplore, gym: viewGyms, center: viewCenter, shop: viewShop,
+         party: viewParty, box: viewBox, dex: viewDex, save: viewSave})[tab]();
+  document.getElementById("app").innerHTML = h + footer();
+}
+
+function viewExplore() {
+  let h = firstAlive() === null ? `<div class="panel" style="border-color:#f44336">⚠️ 你的寶可夢都倒下了，請先到寶可夢中心！</div>` : "";
+  AREAS.forEach((a, i) => {
+    const locked = G.badges < a.req;
+    h += `<div class="panel row"><div class="grow"><b>${a.name}</b>&nbsp; Lv.${a.lv[0]}–${a.lv[1]}<div class="muted">${a.desc}</div></div>
+      ${locked ? btn(`🔒 需 ${a.req} 枚徽章`, "wild", [i], {disabled: true}) : btn("走進草叢", "wild", [i], {cls: "primary"})}</div>`;
+  });
+  return h;
+}
+
+function viewGyms() {
+  return GYMS.map((g, i) => {
+    const team = g.team.map(([s, lv]) => `${G.seen.includes(s) ? SPECIES[s].name : "???"} Lv.${lv}`).join("、");
+    const done = G.badges > i;
+    const action = G.badges < i ? btn("🔒 未解鎖", "gym", [i], {disabled: true})
+                 : btn(done ? "再戰" : "挑戰！", "gym", [i], {cls: done ? "" : "primary"});
+    return `<div class="panel row"><div class="grow">${done ? "✅ " : ""}<b>${g.name}</b> — ${g.leader}
+      <div class="muted">獎勵：${g.badge}、₽${g.reward}<br>隊伍：${team}</div></div>${action}</div>`;
+  }).join("");
+}
+
+function viewCenter() {
+  return `<div class="panel"><h2>🏥 寶可夢中心</h2><p>歡迎來到寶可夢中心！我們可以免費幫你的寶可夢恢復健康。</p>
+    ${btn("讓寶可夢休息一下", "heal", [], {cls: "primary"})}</div>`;
+}
+
+function viewShop() {
+  let h = `<h2>🛒 友好商店</h2>`;
+  for (const [item, price] of Object.entries(SHOP)) {
+    h += `<div class="panel row"><div class="grow"><b>${item}</b> ₽${price}　<span class="muted">持有 ${G.bag[item] || 0}</span>
+      <div class="muted">${SHOP_DESC[item]}</div></div>
+      ${btn("買 1", "buy", [item, 1], {disabled: G.money < price})}${btn("買 5", "buy", [item, 5], {disabled: G.money < price * 5})}</div>`;
+  }
+  if (G.bag["大師球"]) h += `<div class="panel">🟣 大師球 ×${G.bag["大師球"]}（必定捕捉成功）</div>`;
+  return h;
+}
+
+function viewParty() {
+  let h = `<h2>🎒 我的隊伍</h2>`;
+  G.party.forEach((m, i) => {
+    const s = stats(m);
+    let acts = "";
+    if (i > 0) acts += btn("設為首發", "lead", [i], {cls: "full"});
+    if (G.party.length > 1) acts += btn("存入電腦", "dep", [i], {cls: "full"});
+    for (const item of HEAL_ITEMS) if ((G.bag[item] || 0) > 0) acts += btn(`用${item} (${G.bag[item]})`, "use", [item, i], {cls: "full"});
+    h += `<div class="panel row wrap-row">${img(SPRITE(m.sid), "", 80)}
+      <div class="grow" style="min-width:180px">${monHeader(m)}
+        <div class="muted">攻擊 ${s.atk}｜防禦 ${s.def}｜速度 ${s.spd}｜EXP ${m.xp}/${xpNeed(m.lvl)}</div>
+        <div class="muted">招式：${m.moves.join("、")}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:120px">${acts}</div></div>`;
+  });
+  return h;
+}
+
+function viewBox() {
+  let h = `<h2>💻 電腦箱</h2>`;
+  if (!G.box.length) return h + `<p class="muted">電腦箱裡空空的。隊伍滿 6 隻後抓到的寶可夢會送到這裡。</p>`;
+  G.box.forEach((m, i) => {
+    h += `<div class="panel row">${img(SPRITE(m.sid), "", 56)}<div class="grow"><b>${nm(m)}</b> Lv.${m.lvl}<br>${typeBadges(tp(m))}</div>
+      ${btn("領出", "wd", [i], {disabled: G.party.length >= 6})}${btn("放生", "rel", [i])}</div>`;
+  });
+  return h;
+}
+
+function viewDex() {
+  let h = `<h2>📖 圖鑑　<span class="muted">已見 ${G.seen.length}／已捕捉 ${G.caught.length}／共 ${SPECIES_IDS.length}</span></h2><div class="dex">`;
+  for (const sid of SPECIES_IDS) {
+    const no = String(sid).padStart(3, "0");
+    if (G.seen.includes(sid)) {
+      h += `<div class="panel">${img(SPRITE(sid), "", 72)}<div class="muted">${G.caught.includes(sid) ? "✅" : "👁️"} No.${no}</div><b>${SPECIES[sid].name}</b></div>`;
+    } else {
+      h += `<div class="panel"><span class="unk">❓</span><div class="muted">No.${no}</div><b>？？？</b></div>`;
+    }
+  }
+  return h + `</div>`;
+}
+
+function viewSave() {
+  return `<div class="panel"><h2>💾 存檔</h2>
+    <p>✅ 遊戲進度會<b>自動儲存</b>在這台電腦的瀏覽器裡，關掉再打開會接著玩。</p>
+    <p class="muted">想換到其他電腦玩，或是怕清除瀏覽器資料後進度不見，可以下載存檔檔案備份。</p>
+    <div class="row wrap-row">${btn("⬇️ 下載存檔", "exportSave", [], {cls: "primary"})}${btn("⬆️ 讀取存檔檔案", "importSave")}</div></div>
+    <div class="panel">${btn("🗑️ 重新開始新遊戲", "reset")}</div>`;
+}
+
+const footer = () => `<p class="muted footer">非官方粉絲作品，僅供學習交流。Pokémon © Nintendo / Creatures / GAME FREAK。圖片來源：PokeAPI。</p>`;
+
+render();
+</script>
+</body>
+</html>
